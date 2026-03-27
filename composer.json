@@ -22,7 +22,7 @@
     "require": {
         "php": "^8.2",
         "illuminate/support": "^11.0",
-        "uspdev/forms": "^0.6",
+        "uspdev/forms": "*",
         "spatie/laravel-activitylog": "^4.9",
         "spatie/laravel-permission": "^6.15",
         "symfony/workflow": "^7.1",
@@ -36,5 +36,13 @@
                 "Uspdev\\Workflow\\WorkflowServiceProvider"
             ]
         }
-    }
+    },
+    "repositories":
+    [
+        {
+            "type": "path",
+            "url": "../forms",
+            "options": {"symlink": true}
+        }
+    ]
 }
