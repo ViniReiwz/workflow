@@ -22,6 +22,10 @@ class WorkflowServiceProvider extends ServiceProvider
             __DIR__ . '/../database/migrations/' => database_path('migrations'),
         ], 'workflow-migrations');
 
+        $this->loadViewsFrom(__DIR__ . '/../resources/views','uspdev-workflow');
+
+        $this->loadRoutesFrom(__DIR__.'/../routes/web.php');
+
         // Load migrations
         // $this->loadMigrationsFrom(__DIR__ . '/../database/migrations');
     }
