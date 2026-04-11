@@ -13,9 +13,6 @@
         Definições
         <a href="{{ route('workflows.create-definition') }}" class="btn btn-sm btn-primary">Nova Definição</a>
       </div>
-      <div>
-        @include('uspdev-forms::partials.ajuda-modal')
-      </div>
     </div>
     <div class="card-body">
       <table class="table table-bordered table-hover">

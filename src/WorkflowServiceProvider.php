@@ -14,7 +14,7 @@ class WorkflowServiceProvider extends ServiceProvider
     {
         // Publish config file
         $this->publishes([
-            __DIR__.'/../config/workflow.php' => config_path('workflow.php'),
+            __DIR__.'/../config/workflow.php' => config_path('uspdev-workflow.php'),
         ], 'workflow-config');
 
         // Publish migrations
@@ -38,7 +38,7 @@ class WorkflowServiceProvider extends ServiceProvider
     public function register()
     {
         $this->mergeConfigFrom(
-            __DIR__ . '/../config/workflow.php', 'uspdev-workflow'
+            __DIR__ . '/../config/uspdev-workflow.php', 'uspdev-workflow'
         );
     }
 }

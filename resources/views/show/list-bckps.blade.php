@@ -12,9 +12,6 @@
         <span class="text-danger">USPdev workflow</span> >
         Backups
       </div>
-      <div>
-        @include('uspdev-forms::partials.ajuda-modal')
-      </div>
     </div>
     <div class="card-body">
       <table class="table table-bordered table-hover">
@@ -27,23 +24,25 @@
         </thead>
         <tbody>
           @foreach ($workflowDefinitions as $workflowDefinition)
+          @php
+            $count = is_dir(config('uspdev-workflow.storagePath')) ? count(array_filter(scandir(config('uspdev-workflow.storagePath')), fn($filename) => str_contains($filename,$workflowDefinition->name))) : 0;
+          @endphp
             <tr>
               <td>
                 {{ $workflowDefinition->name }}
                 <span class="badge badge-warning badge-pill" title="Backups existentes">
                   {{-- 
-                    Verifica se o diretório que guarda os formulários existe.
-                    Caso exista, exibe o número de backups do formulário existem dentro dele.
-                    Senão, mostra 0.
+                    Exibe o número de backups da definição que existem atualmente
                   --}}
-                  {{ is_dir(config('uspdev-workflow.storagePath')) ? count(array_filter(scandir(config('uspdev-workflow.storagePath')), fn($filename) => str_contains($filename,$workflowDefinition->name))) : 0 }}
+                  {{ $count }}
                 </span>
               </td>
               <td>
                 {{ $workflowDefinition->description }}
               </td>
               <td class="d-flex justify-content-start">
-                @include('uspdev-workflow::show.partials.edit-btn')
+                @include('uspdev-workflow::show.partials.bckpgen-btn')
+                @includeWhen($count > 0,'uspdev-workflow::show.partials.bckplist-btn')
               </td>
             </tr>
           @endforeach
@@ -51,4 +50,7 @@
       </table>
     </div>
   </div>
+    <div class="mt-2">
+    @include('uspdev-workflow::show.partials.globalbckp-btn')
+    </div>
 @endsection
