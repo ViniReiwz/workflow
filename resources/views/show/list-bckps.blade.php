@@ -36,7 +36,7 @@
                     Caso exista, exibe o número de backups do formulário existem dentro dele.
                     Senão, mostra 0.
                   --}}
-                  {{ is_dir(config('uspdev-forms.forms_storage_dir')) ? count(array_filter(scandir(config('uspdev-forms.forms_storage_dir')), fn($filename) => str_contains($filename,$workflowDefinition->name))) : 0 }}
+                  {{ is_dir(config('uspdev-workflow.storagePath')) ? count(array_filter(scandir(config('uspdev-workflow.storagePath')), fn($filename) => str_contains($filename,$workflowDefinition->name))) : 0 }}
                 </span>
               </td>
               <td>
