@@ -5,6 +5,7 @@ namespace Uspdev\Workflow\Http\Controllers;
 use App\Http\Controllers\Controller;
 use Exception;
 use Uspdev\Workflow\Models\WorkflowDefinition;
+use File;
 
 class WorkflowBackupController extends Controller
 {
@@ -80,5 +81,78 @@ class WorkflowBackupController extends Controller
         }
 
         return view('uspdev-workflow::show.list-def-bckps', ['workflowDefinition' => $workflowDefinition, 'time_data' => $time_data]);
+    }
+
+    public function remove_bckp(WorkflowDefinition $workflowDefinition, string $created_time)
+    {
+        $created_time = str_replace(' - ','_',$created_time);
+        $created_time = str_replace('/','-',$created_time);
+
+        // Remonta o nome do arquivo
+        $filename = $workflowDefinition->name . '@' . $created_time . '.json';
+        
+        // Remonta o caminho completo do arquivo
+        $filepath = config('uspdev-workflow.storagePath') . '/' . $filename;
+
+        // Caso o arquivo exista no caminho remontado anteriormente, o remove
+        if(File::exists($filepath))
+        {    
+            File::delete($filepath);
+            return redirect()->back()->with('alert-warning','Backup ' . $filename . ' removido com sucesso.' );
+        }
+
+        // Caso contrário, exibe uma mensagem de erro.
+        else
+        {
+            return redirect()->back()->with('alert-danger', 'Impossível remover ' . $filename .' => arquivo não existe.');
+        }
+    }
+
+    public function remove_def_bckps(WorkflowDefinition $workflowDefinition)
+    {
+        // Recupera o diretório em que os backups são salvos
+        $file_dir = config('uspdev-workflow.storagePath');
+
+        // Filtra os arquivos pelos nomes que contém o nome da definição
+        $files = array_filter(scandir($file_dir),function($filename) use ($workflowDefinition){return str_contains($filename,$workflowDefinition->name);});
+
+        // Percorre todos os arquivos
+        foreach($files as $filename)
+        {
+            // Reconstrói o caminho dos arquivo
+            $filepath = $file_dir . '/' . $filename;
+
+            // Verifica a existência e deleta em caso afirmativo
+            if(File::exists($filepath));
+            {
+                File::delete($filepath);
+            }
+        }
+
+        return redirect()->back()->with('alert-warning', 'Backups de ' . $workflowDefinition->name . ' removidos com sucesso.');
+    }
+
+    public function remove_all_bckps()
+    {
+        // Recupera o diretório em que os arquivos são salvos
+        $file_dir = config('uspdev-workflow.storagePath');
+
+        // Filtra para obter apenas os arquivos .json(evita '.' e '..', além de possível lixo)
+        $files = array_filter(scandir($file_dir), function($file) { return str_contains($file,'.json'); });
+
+        // Percorre todos os arquivos do diretório
+        foreach($files as $filename)
+        {
+            // Reconstrói o caminho do arquivo
+            $filepath = $file_dir . '/' . $filename;
+
+            // Verifica se o mesmo existe, e o deleta em caso afirmativo
+            if(File::exists($filepath))
+            {
+                File::delete($filepath);
+            }
+        }
+
+        return redirect()->back()->with('alert-warning', 'Backups removidos com sucesso.');
     }
 }
