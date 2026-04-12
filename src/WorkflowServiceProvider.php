@@ -1,6 +1,7 @@
 <?php
 namespace Uspdev\Workflow;
 
+use Uspdev\Workflow\Console\Commands\WorkflowSync;
 use Illuminate\Support\ServiceProvider;
 
 class WorkflowServiceProvider extends ServiceProvider
@@ -26,8 +27,10 @@ class WorkflowServiceProvider extends ServiceProvider
 
         $this->loadRoutesFrom(__DIR__.'/../routes/web.php');
 
-        // Load migrations
-        // $this->loadMigrationsFrom(__DIR__ . '/../database/migrations');
+        // Publica o comando de WorkflowSync
+        $this->commands([
+            WorkflowSync::class,
+        ]);
     }
 
     /**

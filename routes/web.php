@@ -12,4 +12,5 @@ Route::group(['prefix' => config('uspdev-workflow.prefix'), 'middleware' => ['we
     Route::get('/backups/{workflowDefinition}/remove/{created_time}', [WorkflowBackupController::class, 'remove_bckp'])->name('workflows.def-remove-bckp');
     Route::get('/backups/{workflowDefinition}/remove-all', [WorkflowBackupController::class, 'remove_def_bckps'])->name('workflows.def-rmv-bckps');
     Route::get('/backups/remove-all', [WorkflowBackupController::class, 'remove_all_bckps'])->name('workflows.rmv-bckps');
+    Route::get('/backups/{workflowDefinition}/restore/{created_time}', [WorkflowBackupController::class,'restore_backup'])->name('workflows.restore-bckp');
 });

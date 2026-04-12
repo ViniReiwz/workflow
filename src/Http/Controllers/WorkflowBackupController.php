@@ -4,6 +4,7 @@ namespace Uspdev\Workflow\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use Exception;
+use Illuminate\Support\Facades\Artisan;
 use Uspdev\Workflow\Models\WorkflowDefinition;
 use File;
 
@@ -154,5 +155,16 @@ class WorkflowBackupController extends Controller
         }
 
         return redirect()->back()->with('alert-warning', 'Backups removidos com sucesso.');
+    }
+
+    public function restore_backup(WorkflowDefinition $workflowDefinition, string $created_time)
+    {
+        $file_dir = config('uspdev-workflow.storagePath');
+        $filename = $workflowDefinition->name . '@' . $created_time;
+        $filepath = $file_dir . '/' . $filename . '.json';
+
+        Artisan::call('workflow:sync', ['--path' => $filepath]);
+
+        return redirect()->back()->with('alert-success','Backup ' . $filename . ' restaurado com sucesso');
     }
 }
