@@ -26,9 +26,12 @@ class WorkflowSync extends Command
      */
     public function handle()
     {
+        // Pega o arquivo passado na option --path.
+        // Caso não esteja definido, pega o diretório padrão de armazenamento em uspdev-workflow.php
         $path = $this->option('path') ?: config('uspdev-workflow.storagePath');
         $this->info('Sicnronizando workflows do caminho: ' . $path);
 
+        // Chama o serviço de sincronizar no caminho especificado
         app(WorkflowSyncService::class)->workflow_sync($path);
     }
 }
