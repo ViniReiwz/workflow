@@ -1,6 +1,7 @@
 <?php
 namespace Uspdev\Workflow;
 
+use Uspdev\Workflow\Console\Commands\WorkflowSync;
 use Illuminate\Support\ServiceProvider;
 
 class WorkflowServiceProvider extends ServiceProvider
@@ -14,7 +15,7 @@ class WorkflowServiceProvider extends ServiceProvider
     {
         // Publish config file
         $this->publishes([
-            __DIR__.'/../config/workflow.php' => config_path('workflow.php'),
+            __DIR__.'/../config/workflow.php' => config_path('uspdev-workflow.php'),
         ], 'workflow-config');
 
         // Publish migrations
@@ -22,8 +23,14 @@ class WorkflowServiceProvider extends ServiceProvider
             __DIR__ . '/../database/migrations/' => database_path('migrations'),
         ], 'workflow-migrations');
 
-        // Load migrations
-        // $this->loadMigrationsFrom(__DIR__ . '/../database/migrations');
+        $this->loadViewsFrom(__DIR__ . '/../resources/views','uspdev-workflow');
+
+        $this->loadRoutesFrom(__DIR__.'/../routes/web.php');
+
+        // Publica o comando de WorkflowSync
+        $this->commands([
+            WorkflowSync::class,
+        ]);
     }
 
     /**
@@ -34,7 +41,7 @@ class WorkflowServiceProvider extends ServiceProvider
     public function register()
     {
         $this->mergeConfigFrom(
-            __DIR__ . '/../config/workflow.php', 'uspdev-workflow'
+            __DIR__ . '/../config/uspdev-workflow.php', 'uspdev-workflow'
         );
     }
 }
