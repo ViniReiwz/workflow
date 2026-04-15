@@ -221,9 +221,18 @@ class WorkflowBackupController extends Controller
         $filepath = $file_dir . '/' . $filename . '.json';
     
         // Chama o comando 'workflow:sync', passando o caminho desejado como option {--path}
-        Artisan::call('workflow:sync', ['--path' => $filepath]);
+        $result = Artisan::call('workflow:sync', ['--path' => $filepath]);
 
         // Retorna uma mensagem de sucesso.
-        return redirect()->back()->with('alert-success','Backup ' . $filename . ' restaurado com sucesso');
+        if($result)
+        {   
+            return redirect()->back()->with('alert-success','Backup ' . $filename . ' restaurado com sucesso');
+        }
+
+        // Mensagem de erro
+        else
+        {
+            return redirect()->back()->with('alert-danger','O caminho indicado: ' . $filename . ' não representa um diretório nem um arquivo existente.');
+        }
     }
 }

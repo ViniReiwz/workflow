@@ -134,6 +134,21 @@ Para excluir uma definição, utilize o método `Workflow::deletarDefinicaodeWor
 Workflow::deletarDefinicaodeWorkflow($definitionName);
 ```
 
+### 5. **Restaurando uma definição de workflow**
+
+Ao gerar o backup de uma definição, é possível modificá-la através do mesmo e salvar as alterações, ou restaurar versões antigas através do comando `workflow:sync`. 
+O comando pode receber também um caminho na option `--path`, de forma a informar o caminho do arquivo ou diretório em que os .json das definições estão salvos. No caso da option não especificada, o diretório observado é o definido em `WORKFLOW_STORAGE_PATH` no arquivo .env (ou em storage/app/workflowsJson, o diretório padrão definido no arquivo de config)
+
+Dessa forma:
+```bash
+php artisan workflow:sync
+
+php artisan workflow:sync --path=meu/caminho/pro/diretório
+
+php artisan workflow:sync --path=meu/caminho/pro/backup.json
+```
+No caso da sincronização por diretório, o comando restaura os arquivos de .json mais recentemente modificados.
+
 ### 5. **Listando as definições de workflows**
 
 Para listar as definições de workflow, utilize o método `Workflow::obterTodosWorkflowDefinitions`. Este método retorna todas as definições de workflow presentes no banco de dados.
