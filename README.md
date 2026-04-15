@@ -149,7 +149,7 @@ php artisan workflow:sync --path=meu/caminho/pro/backup.json
 ```
 No caso da sincronização por diretório, o comando restaura os arquivos de .json mais recentemente modificados.
 
-### 5. **Listando as definições de workflows**
+### 6. **Listando as definições de workflows**
 
 Para listar as definições de workflow, utilize o método `Workflow::obterTodosWorkflowDefinitions`. Este método retorna todas as definições de workflow presentes no banco de dados.
 
@@ -159,7 +159,7 @@ $workflowDefinitions = Workflow::obterTodosWorkflowDefinitions();
 
 Com os dados retornados, você pode exibir o JSON formatado ou a imagem gerada do workflow na interface do usuário.
 
-### 6. **Criando um objeto de workflow**
+### 7. **Criando um objeto de workflow**
 
 Para instanciar um novo objeto de workflow baseado em uma definição existente, utilize o método `Workflow::criarWorkflowObject`. Ele inicializa o objeto no estado inicial definido pela configuração.
 
@@ -167,7 +167,7 @@ Para instanciar um novo objeto de workflow baseado em uma definição existente,
 $WorkflowObject = Workflow::criarWorkflowObject('pull_requests');
 ```
 
-### 7. **Exibindo um objeto de workflow**
+### 8. **Exibindo um objeto de workflow**
 
 Para exibir um objeto de workflow em uma view, utilize o método `Workflow::obterDadosDoObjeto`. Este método retorna os dados estruturados do objeto, incluindo sua definição, transições, formulários, título, atividades e submissões de formulário.
 
@@ -183,7 +183,7 @@ $activities = $workflowObjectData['activities'];
 $formSubmissions = $workflowObjectData['formSubmissions'];
 ```
 
-### 8. **Exibindo todos os objetos de uma definição**
+### 9. **Exibindo todos os objetos de uma definição**
 
 Para exibir todos os objetos de uma definição de workflow, utilize o método `Workflow::listarWorkflowsdaDefinition`. Este método retorna os objetos de workflow, as transições daquela definição e a própria definição
 
@@ -195,7 +195,7 @@ $workflowTransitions = $workflowsToDisplay['workflowsTransitions'];
 $workflowDefinition = $workflowsToDisplay['workflowDefinition'];
 ```
 
-### 9. **Exibindo todos os objetos criados pelo usuário**
+### 10. **Exibindo todos os objetos criados pelo usuário**
 
 Para exibir todos os objetos criados pelo usuário, utilize o método `Workflow::listarWorkflowsdoUser`. É possível passar um id de usuário como parâmetro, mas se não for fornecido, será utilizado o id do usuário autenticado no sistema. O método retorna os objetos de workflow e os dados do objeto, incluindo estado do dele e sua definição de workflow
 
@@ -206,7 +206,7 @@ $workflowObjects = $workflowsToDisplay['workflows'];
 $workflowData = $workflowsToDisplay['workflowData'];
 ```
 
-### 10. **Gerenciando transições de estado**
+### 11. **Gerenciando transições de estado**
 
 Utilize o método `Workflow::aplicarTransition` para mudar o estado de um objeto de workflow com base nas transições definidas.
 
@@ -216,7 +216,7 @@ Workflow::aplicarTransition($workflowObjectId, 'tr_opened_in_review');
 
 Esse método verifica se a transição é válida no estado atual antes de aplicá-la.
 
-### 11. **Apagando um objeto de workflow**
+### 12. **Apagando um objeto de workflow**
 
 Para excluir um objeto, utilize o método `Workflow::deletarWorkflow`.
 
@@ -224,7 +224,7 @@ Para excluir um objeto, utilize o método `Workflow::deletarWorkflow`.
 Workflow::deletarWorkflow($workflowObjectId);
 ```
 
-### 12. **Enviando um formulário**
+### 13. **Enviando um formulário**
 
 Para fazer a submissão de um formulário de um objeto de workflow, utilize o método `Workflow::enviarFormulario`
 
