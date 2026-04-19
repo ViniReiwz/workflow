@@ -32,6 +32,21 @@ class WorkflowSync extends Command
         $this->info('Sicnronizando workflows do caminho: ' . $path);
 
         // Chama o serviço de sincronizar no caminho especificado
-        app(WorkflowSyncService::class)->workflow_sync($path);
+        $result = app(WorkflowSyncService::class)->workflow_sync($path);
+
+        // Caso a sincronização tenha sido bem sucedida
+        if($result)
+        {
+            $this->line('Sincronização bem sucedida !');
+        }
+
+        // Se a sincronização falhar
+        else
+        {
+            $this->line('Falha ao sincronizar -- Caminho não é diretório nem arquivo existente!');
+        }
+
+        // Retorna (para uso dentro do código, como por exemplo em WorkflowBackupController.php, l:224)
+        return $result;
     }
 }

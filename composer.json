@@ -44,5 +44,13 @@
                 "Uspdev\\Workflow\\WorkflowServiceProvider"
             ]
         }
-    }
+    },
+    "repositories":
+    [
+        {
+            "type": "path",
+            "url": "../forms",
+            "options": {"symlink": true}
+        }
+    ]
 }
