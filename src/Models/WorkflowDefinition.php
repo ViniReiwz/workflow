@@ -89,7 +89,8 @@ class WorkflowDefinition extends Model
      */
     public function verifyRole(string $roleName, User $user): bool
     {
-        if($user->hasRole($roleName)){ return true; }
+        if($user->hasRole($roleName . '_wf_' . $this->id))
+        { return true; }
 
         $role = $this->getDefinitionData()->roles->where('name', $roleName)->firstOrFail();
         
