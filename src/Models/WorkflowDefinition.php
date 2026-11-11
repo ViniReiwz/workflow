@@ -257,13 +257,13 @@ class WorkflowDefinition extends Model
     }
 
     /**
-     * Verifica se a definição está ou não publicada, retornando true em caso 
+     * Verifica se a definição está ou não arquivada, retornando true em caso 
      * afirmativo e false c.c
      * @return boolean
      */
-    public function isPublished()
+    public function isArchived()
     {
-        return $this->status == WorkflowStatus::PUBLISHED;
+        return $this->status == WorkflowStatus::ARCHIVED;
     }
 
     /**
