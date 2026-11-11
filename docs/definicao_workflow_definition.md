@@ -31,8 +31,6 @@ Lista de roles disponíveis no workflow.
 * Roles sem source são persistidas em `workflow_definition_roles`.
 * Roles com source são dinâmicas e resolvidas a partir dos dados da instância do workflow.
 
-> Dentro do sistema, as 'roles' do workflow forma implementadas como Permissions da biblioteca Spatie, dado a simplicidade da implementação e da atribuição destes papéis aos usuários
-
 ---
 ## places
 
