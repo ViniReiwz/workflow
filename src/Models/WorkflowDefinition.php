@@ -604,11 +604,11 @@ class WorkflowDefinition extends Model
      * Retorna todas as definições cujo status é 'PUBLISHED'
      * @return Collection<int, WorkflowDefinition>
      */
-    public static function getAllPublished()
+    public static function getUnarchived()
     {
         $all = SELF::all();
         return $all->filter(function($workflowDef){
-                return $workflowDef->status === WorkflowStatus::PUBLISHED;
+            return ($workflowDef->status != WorkflowStatus::ARCHIVED);
         });
     }
 

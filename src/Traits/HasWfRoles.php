@@ -21,7 +21,7 @@ trait HasWfRoles
         /** @var Collection<int, string> */
         $guardNamesCol = $this->spatieGuardNames();
 
-        $pubDefs = WorkflowDefinition::getAllPublished();
+        $pubDefs = WorkflowDefinition::getUnarchived();
         
         foreach($pubDefs as $pubDef)
         {
