@@ -20,7 +20,7 @@
                 <span class="h5">
                   {{ $role['label'] }} -
                   {{ $role['source'] ?? '' }}
-                  @if($workflowDefinitionData['workflowDefinition']->isPublished())
+                  @if(!$workflowDefinitionData['workflowDefinition']->isArchived())
                   @include('uspdev-workflow::definition.partials.codpes-adicionar-btn', [
                     'wf_id' => $workflowDefinitionData['workflowDefinition']->id,
                   ])
