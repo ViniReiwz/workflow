@@ -33,7 +33,7 @@
                   <div class="hover">
                     <span>{{ $user->name }}</span>
                     <span class="hide">
-                      @if ($user->codpes != auth()->user()->codpes && $workflowDefinitionData['workflowDefinition']->isPublished())
+                      @if ($user->codpes != auth()->user()->codpes && !$workflowDefinitionData['workflowDefinition']->isArchived())
                         @include('uspdev-workflow::definition.partials.codpes-remover-btn', [
                           'codpes' => $user->codpes,
                           'wf_id' => $workflowDefinitionData['workflowDefinition']->id,
