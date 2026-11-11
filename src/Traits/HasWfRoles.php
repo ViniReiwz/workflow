@@ -13,7 +13,9 @@ trait HasWfRoles
     use HasRoles{ getGuardNames as protected spatieGuardNames; }
 
     /**
-     * Sobrescreve o método de recuperar os guard names para suportar o workflow.
+     * Sobrescreve o método de recuperar os guard names do Spatie para 
+     * suportar o workflow, atuadno em todas as definições não arquivadas.
+     * 
      * @return Collection<int, string>
      */
     public function getGuardNames(): Collection

@@ -22,6 +22,13 @@ class TransitionDefinition extends AbstractWfDto
         public ?NotificationDefinition $notifications = null,
     ) {}
 
+    /**
+     * Retorna uma transition DTO a partir de um array
+     * 
+     * @param array<string,mixed> $data
+     * 
+     * @return static
+     */
     public static function fromArray(array $data): static
     {
         $errors = self::validationErrors($data);
@@ -74,12 +81,20 @@ class TransitionDefinition extends AbstractWfDto
         );
     }
 
+    /**
+     * Valida os dados do DTO da transition a partir do array, fazendo a 
+     * conversão
+     * 
+     * @param array<string,mixed> $data
+     */
     public static function validate(array $data): void
     {
         self::fromArray($data);
     }
 
     /**
+     * Recupera os erros de validação dos dados vindos do array
+     * @param array<string,mixed> $data
      * @return array<int, string>
      */
     private static function validationErrors(array $data): array

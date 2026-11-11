@@ -17,6 +17,8 @@ class RoleDefinition extends AbstractWfDto
 
     /**
      * Cria o DTO a partir de um array bruto.
+     * 
+     * @param array<string,mixed>
      */
     public static function fromArray(array $data): static
     {
@@ -29,6 +31,12 @@ class RoleDefinition extends AbstractWfDto
         );
     }
 
+    /**
+     * Valida os dados vindos de array de acordo com as especificações do DTO 
+     * das roles
+     * 
+     * @param array<string,mixed>
+     */
     public static function validate(array $data): void
     {
         $errors = [];

@@ -10,6 +10,12 @@ class BindingDefinition extends AbstractWfDto
         public string $resolver   // O método ou classe que vai transformar o dado (ex: 'user_by_codpes')
     ) {}
 
+    /**
+     * Retorna um objeto a partir dos dados vindos do array
+     * @param array<string, mixed> $data
+     * 
+     * @return static
+     */
     public static function fromArray(array $data): static
     {
         self::validate($data);
@@ -21,6 +27,9 @@ class BindingDefinition extends AbstractWfDto
         );
     }
 
+    /**
+     * Valida os dados de um binding
+     */
     public static function validate(array $data): void
     {
         $errors = [];
@@ -30,6 +39,9 @@ class BindingDefinition extends AbstractWfDto
         self::throwIfInvalid($errors);
     }
 
+    /**
+     * Transfere os dados do DTO para um array
+     */
     public function toArray(): array
     {
         return [

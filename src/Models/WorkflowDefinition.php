@@ -189,7 +189,8 @@ class WorkflowDefinition extends Model
 
     /**
      * Modifica o status de uma definição para o referenciado na função.
-     * Caso o estado atual da função já seja o desejado, apenas retorna da função sem mais modificações
+     * Caso o estado atual da função já seja o desejado, apenas retorna da 
+     * função sem mais modificações
      * @param WorkflowStatus $status
      * @return void
      */
