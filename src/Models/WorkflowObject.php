@@ -461,6 +461,31 @@ class WorkflowObject extends Model
         return $objects;
     }
 
+    private function handlePlaceChange(TransitionDefinition $appliedTrans)
+    {
+        $newCurrPlace = [];
+        foreach($this->current_places as $curr_place) 
+        {
+            if($curr_place != $appliedTrans->from){ $newCurrPlace[] = $curr_place; }
+        }
+        
+        foreach($appliedTrans->tos as $to)
+        {
+            $newCurrPlace[] = $to;
+        }
+
+        $aux = $newCurrPlace[0];
+        $allEqual = true;
+        foreach($newCurrPlace as $newCurr)
+        {
+            if($aux != $newCurr)   { $allEqual = false; break; }
+        }
+
+        if($allEqual){ $newCurrPlace = [$aux]; }
+
+        $this->current_places = $newCurrPlace;
+    }
+
     /**
      * Aplica uma transição à este objeto de workflow. A transição é identificada pelo nome e os dados 
      * necessários são referenciados em inputData.
@@ -534,7 +559,10 @@ class WorkflowObject extends Model
             }
 
             $fromPlaces = $object->current_places;
-            $object->current_places = $transition->tos;
+
+            $this->handlePlaceChange($transition);
+
+            // $object->current_places = $transition->tos;
 
             $object->save();
             $object->history()->create([
@@ -549,6 +577,7 @@ class WorkflowObject extends Model
             ]);
         });
 
+        $this->save();
         $this->refresh();
 
         event(new TransitionAppliedEvent(
@@ -750,8 +779,10 @@ class WorkflowObject extends Model
             ->values();
     }
 
-    private function placeIsLocked(string $placeName): bool
+    private function placeDependencies(string $placeName): int
     {
+        $count = 0;
+
         /** @var WorkflowDefinition */
         $workflowDef = $this->definition;
         foreach($this->current_places as $curr_place)
@@ -759,11 +790,16 @@ class WorkflowObject extends Model
             $transFPlace = $workflowDef->transitionsFromPlace($curr_place);
             foreach($transFPlace as $transition)
             {
-                if(in_array($placeName,$transition->tos)){ return true; }
+                if(in_array($placeName, $transition->tos)){ $count++; }
             }
         }
-        
-        return false;
+
+        return $count;
+    }
+
+    private function placeIsLocked(string $placeName): bool
+    {
+        return $this->placeDependencies($placeName) >= 1;
     }
 
     /**
@@ -783,7 +819,7 @@ class WorkflowObject extends Model
             if(in_array($transition->from, $this->current_places))
             {
                 if(!$this->placeIsLocked($transition->from))
-                { $enabled == true; }
+                { $enabled = true; }
             }
             return $enabled;
         });
