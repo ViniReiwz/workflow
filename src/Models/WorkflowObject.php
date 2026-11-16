@@ -461,14 +461,22 @@ class WorkflowObject extends Model
         return $objects;
     }
 
+    /**
+     * Lida com a alteração de 'current_places' após a aplcação de uma transição
+     * @param TransitionDefinition $appliedTrans Transição aplicada
+     * @return void
+     */
     private function handlePlaceChange(TransitionDefinition $appliedTrans)
     {
         $newCurrPlace = [];
+
+        // Quando uma transição é aplicada, seu 'from' sai de current_places.
         foreach($this->current_places as $curr_place) 
         {
             if($curr_place != $appliedTrans->from){ $newCurrPlace[] = $curr_place; }
         }
         
+        // Assim, os tos desta mesma transição entram em current_places
         foreach($appliedTrans->tos as $to)
         {
             $newCurrPlace[] = $to;
@@ -476,6 +484,9 @@ class WorkflowObject extends Model
 
         $aux = $newCurrPlace[0];
         $allEqual = true;
+
+        // Verifica se todos os places dentro do array são iguais, e o implode em um único valor dentro do array em caso afirmativo.
+        // (Isso ocorre porque podemos ter dependências entre places, que ficam aramzenadas separadamente até que todas sejam resolvidas)
         foreach($newCurrPlace as $newCurr)
         {
             if($aux != $newCurr)   { $allEqual = false; break; }
@@ -779,6 +790,12 @@ class WorkflowObject extends Model
             ->values();
     }
 
+    /**
+     * Contabiliza o número de dependências de um place específico com os places em 
+     * 'current_places'
+     * @param string $placeName Nome do place a ter as dependências contabilizadas
+     * @return int Número de dependências contabilizadas
+     */
     private function placeDependencies(string $placeName): int
     {
         $count = 0;
@@ -787,6 +804,7 @@ class WorkflowObject extends Model
         $workflowDef = $this->definition;
         foreach($this->current_places as $curr_place)
         {
+            // Verifica se, para algum place em 'curr_places' a transition deste também referencia outro place em 'current_places' como destino, caracterizando uma dependência
             $transFPlace = $workflowDef->transitionsFromPlace($curr_place);
             foreach($transFPlace as $transition)
             {
@@ -797,8 +815,14 @@ class WorkflowObject extends Model
         return $count;
     }
 
+    /**
+     * Vertifica se um place está bloqueado, ou seja, não pode ter sua transição executada
+     * @param string $placeName Nome do place a ser verificado
+     * @return bool
+     */
     private function placeIsLocked(string $placeName): bool
     {
+        // Verifica se há alguma dependência deste place
         return $this->placeDependencies($placeName) >= 1;
     }
 
