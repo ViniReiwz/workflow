@@ -615,7 +615,7 @@ class WorkflowObject extends Model
     {
         /** @var WorkflowDefinition */
         $workflowDefinition = $this->definition;
-        if ($workflowDefinition === null) {
+        if ($workflowDefinition == null) {
             return false;
         }
 
