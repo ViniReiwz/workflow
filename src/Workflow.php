@@ -148,50 +148,6 @@ class Workflow
         return $workflowsDisplay;
     }
 
-     /**
-     * Cria ou remove o relacionamento de um usuário com um place de uma WorkflowDefinition
-     * 
-     * @param Integer $request->codpes_rem
-     * @param Integer $request->codpes_add
-     * @param String $request->place
-     * @param String $request->workflowDefinitionName
-     */
-    public static function definirUsuarios(Request $request)
-    {
-        $codpes_rem = $request->input('codpes_rem');
-        $codpes_add = $request->input('codpes_add');
-        $wf_id = $request->input('wf_id');
-        $roleName = $request->input('role') . $wf_id;
-        $guard_name = 'web'; // config('uspdev-workflow.guard_name', 'workflow_').$wf_id;
-        $user = Auth::user();
-        if (! $user->hasPermissionTo($roleName, $guard_name) && ! Gate::allows('admin')) {
-            return response()->json(['alert-danger' => 'Você não tem permissão para gerenciar este departamento.'], 403);
-        }
-
-        if ($codpes_rem) {
-            $userToRemove = User::where('codpes', $codpes_rem)->first();
-            if ($userToRemove) {
-                $perm = Permission::where([
-                        'name' => $roleName,
-                        'guard_name' => $guard_name
-                    ])->first();
-
-                $userToRemove->revokePermissionTo($perm);
-                $request->session()->flash('alert-warning', 'Usuário removido com sucesso!');
-            }
-        }
-        
-
-        if ($codpes_add) {
-            $userToAdd = User::findOrCreateFromReplicado($codpes_add);
-            if ($userToAdd) {
-                $perm = Permission::findOrCreate($roleName, $guard_name);
-                $userToAdd->givePermissionTo($perm);
-
-                $request->session()->flash('alert-success', 'Usuário adicionado com sucesso!');
-            }
-        }
-    }
 
     /**
      * Recupera o workflow atrelado àquele objeto.

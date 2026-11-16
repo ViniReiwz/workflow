@@ -7,14 +7,19 @@ use Uspdev\Workflow\Exceptions\InvalidWorkflowDefinitionException;
 abstract class AbstractWfDto
 {
 
+    // Gera um DTO a partir de um array contendo seus dados, de forma válida
     abstract public static function fromArray(array $data): static;
 
+    // Transfere os dados do DTO para um array
     abstract public function toArray(): array;
 
+    // Valida os dados vindos do array antes de convertê-los no DTO
     abstract public static function validate(array $data): void;
 
     /**
-     * @param array<int, string> $errors
+     * Lança uma exceção caso haja algum erro no DTO
+     * @param array<int,string> $errors
+     * @param mixed $partial
      */
     protected static function throwIfInvalid(array $errors, mixed $partial = null): void
     {
@@ -24,8 +29,12 @@ abstract class AbstractWfDto
     }
 
     /**
-     * @param array<string, mixed> $data
-     * @param array<int, string> $errors
+     * Verifica se um dado campo, vindo de um array, contém uma string não vazia
+     * @param array<string,mixed> $data
+     * @param string $field
+     * @param array<int,string> $errors
+     * 
+     * @return ?string
      */
     protected static function requireString(array $data, string $field, array &$errors): ?string
     {
@@ -38,8 +47,14 @@ abstract class AbstractWfDto
     }
 
     /**
-     * @param array<string, mixed> $data
-     * @param array<int, string> $errors
+     * Verifica se dado campo no array do DTO é uma string, independentemente 
+     * de seu conteúdo.
+     * 
+     * @param array<string,mixed> $data
+     * @param string $field
+     * @param array<int,string> $errors
+     * 
+     * @return ?string
      */
     protected static function optionalString(array $data, string $field, array &$errors): ?string
     {
@@ -56,8 +71,14 @@ abstract class AbstractWfDto
     }
 
     /**
-     * @param array<string, mixed> $data
-     * @param array<int, string> $errors
+     * Verifica se um dado campo é uma lista de strings
+     * 
+     * @param array<string,mixed> $data
+     * @param string $field
+     * @param array<int,string> $errors
+     * @param bool $allowEmpty ->> Permite listas vazias se for true
+     * @param bool $required ->> Indica se o campo é obrigatório ou não
+     * 
      * @return array<int, string>
      */
     protected static function stringList(

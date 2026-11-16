@@ -13,6 +13,7 @@ use Illuminate\Database\QueryException;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\File;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use InvalidArgumentException;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
@@ -58,10 +59,10 @@ class WorkflowDefinition extends Model
         
         foreach($roles as $roleData)
         {
-            Permission::firstOrCreate(
+            Role::firstOrCreate(
                 [
-                    'name' => $roleData['name'] . $this->id,
-                    'guard_name' =>  'web', //config('uspdev-workflow.guard_name', 'workflow_').$this->id,
+                    'name' => $roleData['name'],
+                    'guard_name' =>  config('uspdev-workflow.guard_name', 'workflow_').$this->id,
                 ]
             );
         }
@@ -73,12 +74,12 @@ class WorkflowDefinition extends Model
      */
     private function deleteRoles(): void
     {
-        $guard_name = 'web'; // config('uspdev-workflow.guard_name', 'workflow_').$this->id;
+        $guard_name = config('uspdev-workflow.guard_name', 'workflow_').$this->id;
 
         $roles = $this->definition['roles'];
         foreach($roles as $roleData)
         {
-            Permission::where(['name' => $roleData['name'] . $this->id, 'guard_name' => $guard_name])->delete();
+            Role::where(['name' => $roleData['name'], 'guard_name' => $guard_name])->delete();
         }
     }
 
@@ -92,18 +93,17 @@ class WorkflowDefinition extends Model
      */
     public function verifyRole(string|array $roleNames, User $user): bool
     {
-        // TODO - Lógica do guar_name não funciona para permissions também, resolver isso ! (Ver no senhaunica o que eles fazem)
-        $guard_name = 'web'; // config('uspdev-workflow.guard_name', 'workflow_').$this->id;
+        $guard_name = config('uspdev-workflow.guard_name', 'workflow_').$this->id;
 
         if(!is_array($roleNames)){ $roleNames = [$roleNames]; }
         $allRoles = $this->getDefinitionData()->roles;
 
         foreach($roleNames as $roleName)
         {
-            if($user->hasPermissionTo($roleName . $this->id, $guard_name))
+            if($user->hasRole($roleName, $guard_name))
             { return true; }
 
-            $role = $allRoles->where('name', $roleName . $this->id)->first();
+            $role = $allRoles->where('name', $roleName)->first();
             
             // Trata o caso em que a role está associada à uma permission por 'source'
             if(isset($role->source) && $role->source[0] == '*')
@@ -111,11 +111,11 @@ class WorkflowDefinition extends Model
                 // A string em $role->source tem formato '*guard_name.NomePerm', então faz essa separação em um array
                 $sourceData = explode(".", substr($role->source, 1));
                 
-                if($user->hasPermissionTo($sourceData[1], $sourceData[0])) { return true; };
+                if($user->hasRole($sourceData[1], $sourceData[0])) { return true; };
             }
         }
 
-        return false || Gate::allows('admin');
+        return false || Gate::forUser($user)->allows('admin');
     }
 
     /**
@@ -189,7 +189,8 @@ class WorkflowDefinition extends Model
 
     /**
      * Modifica o status de uma definição para o referenciado na função.
-     * Caso o estado atual da função já seja o desejado, apenas retorna da função sem mais modificações
+     * Caso o estado atual da função já seja o desejado, apenas retorna da 
+     * função sem mais modificações
      * @param WorkflowStatus $status
      * @return void
      */
@@ -254,6 +255,16 @@ class WorkflowDefinition extends Model
     public function archive(): void
     {
         $this->changeStatusTo(WorkflowStatus::ARCHIVED);
+    }
+
+    /**
+     * Verifica se a definição está ou não arquivada, retornando true em caso 
+     * afirmativo e false c.c
+     * @return boolean
+     */
+    public function isArchived()
+    {
+        return $this->status == WorkflowStatus::ARCHIVED;
     }
 
     /**
@@ -395,14 +406,15 @@ class WorkflowDefinition extends Model
 
     public static function findUsersWithRole(string $roleName, string $defName, int $defVersion)
     {
-           $workflowDef = SELF::_load($defName, $defVersion);
-           $users = User::all();
-           
-           $users = $users->filter(function($user) use ($workflowDef, $roleName){
-                return $workflowDef->verifyRole($roleName, $user);
-           });
+        
+        $workflowDef = SELF::_load($defName, $defVersion);
+        $users = User::all();
+    
+        $users = $users->filter(function($user) use ($workflowDef, $roleName){
+            return $workflowDef->verifyRole($roleName, $user);
+        });
 
-           return $users;
+        return $users;
     }
 
     // **************************************
@@ -587,5 +599,63 @@ class WorkflowDefinition extends Model
         $workflowData['version'] = $workflowDefinition->version;
 
         return $workflowData;
+    }
+
+    /**
+     * Retorna todas as definições cujo status é 'PUBLISHED'
+     * @return Collection<int, WorkflowDefinition>
+     */
+    public static function getUnarchived()
+    {
+        $all = SELF::all();
+        return $all->filter(function($workflowDef){
+            return ($workflowDef->status != WorkflowStatus::ARCHIVED);
+        });
+    }
+
+    /**
+     * Gerencia o relacionamento de um usuário com a role da definição (atribuindo-a 
+     * ou removendo-a do usuário)
+     * @param Integer $request->codpes_rem
+     * @param Integer $request->codpes_add
+     * @param String $request->place
+     * @param String $request->workflowDefinitionName     
+    */
+    public static function mngUsrRoleRelation(Request $request)
+    {
+        $codpes_rem = $request->input('codpes_rem');
+        $codpes_add = $request->input('codpes_add');
+        $wf_id = $request->input('wf_id');
+        $roleName = $request->input('role');
+        $guard_name = config('uspdev-workflow.guard_name', 'workflow_').$wf_id;
+        $user = Auth::user();
+
+        if (! $user->hasRole($roleName, $guard_name) && ! Gate::allows('admin')) {
+            return response()->json(['alert-danger' => 'Você não tem permissão para gerenciar este departamento.'], 403);
+        }
+
+        if ($codpes_rem) {
+            $userToRemove = User::where('codpes', $codpes_rem)->first();
+            if ($userToRemove) {
+                $role = Role::where([
+                        'name' => $roleName,
+                        'guard_name' => $guard_name
+                    ])->first();
+
+                $userToRemove->removeRole($role);
+                $request->session()->flash('alert-warning', 'Usuário removido com sucesso!');
+            }
+        }
+        
+
+        if ($codpes_add) {
+            $userToAdd = User::findOrCreateFromReplicado($codpes_add);
+            if ($userToAdd) {
+                $role = Role::findOrCreate($roleName, $guard_name);
+                $userToAdd->assignRole($role);
+
+                $request->session()->flash('alert-success', 'Usuário adicionado com sucesso!');
+            }
+        }
     }
 }

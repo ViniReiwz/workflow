@@ -25,6 +25,13 @@ class WorkflowDefinitionData extends AbstractWfDto
         private array $extra = [],
     ) {}
 
+    /**
+     * Gera o DTO de uma WorkflowDefinition a partir de um array
+     * 
+     * @param array<string,mixed> $data
+     * 
+     * @return static
+     */
     public static function fromArray(array $data): static
     {
         $errors = [];
@@ -97,6 +104,11 @@ class WorkflowDefinitionData extends AbstractWfDto
         return $partial;
     }
 
+    /**
+     * Valida os dados de uma definição de workflow vindos de um array
+     * 
+     * @param array<string,mixed> $data
+     */
     public static function validate(array $data): void
     {
         self::fromArray($data);
@@ -152,6 +164,11 @@ class WorkflowDefinitionData extends AbstractWfDto
         return $items;
     }
 
+    /**
+     * Transfere os dados da DTO para um array
+     * 
+     * @return array<string,mixed>
+     */
     public function toArray(): array
     {
         return array_merge($this->extra, [
@@ -165,17 +182,34 @@ class WorkflowDefinitionData extends AbstractWfDto
         ]);
     }
 
+    /**
+     * Retorna o PlaceDefinition para o place referenciado pelo nome
+     * 
+     * @param string $placeName
+     * 
+     * @return ?PlaceDefinition
+     */
     public function place(string $placeName): ?PlaceDefinition
     {
         return $this->places->firstWhere('name', $placeName);
     }
 
+    /**
+     * Retorna a TransitionDefinition referenciada pelo nome
+     * 
+     * @param string $transitionName
+     * 
+     * @return ?TransitionDefinition
+     */
     public function transition(string $transitionName): ?TransitionDefinition
     {
         return $this->transitions->firstWhere('name', $transitionName);
     }
 
     /**
+     * Retorna um array com todos os nomes dos forms referenciados em todas
+     * as transitions da definição
+     * 
      * @return array<int, string>
      */
     public function referencedForms(): array
@@ -189,6 +223,8 @@ class WorkflowDefinitionData extends AbstractWfDto
     }
 
     /**
+     * Retorna todas as roles referenciadas pela definição
+     * 
      * @return array<int, string>
      */
     public function referencedRoles(): array
@@ -209,6 +245,11 @@ class WorkflowDefinitionData extends AbstractWfDto
     }
 
     /**
+     * Resolve as notificações para uma transition especifca, referenciada 
+     * pelo seu nome.
+     * 
+     * @param string $transitionName
+     * 
      * @return array{roles: array<int, string>}
      */
     public function resolveNotificationsFor(string $transitionName): array

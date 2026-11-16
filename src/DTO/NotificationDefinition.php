@@ -14,6 +14,7 @@ class NotificationDefinition extends AbstractWfDto
 
     /**
      * Cria o DTO de notificação garantindo que a estrutura do JSON seja respeitada.
+     * @param array<string,mixed>
      */
     public static function fromArray(array $data): static
     {
@@ -25,6 +26,11 @@ class NotificationDefinition extends AbstractWfDto
         );
     }
 
+    /**
+     * Valida os dados vindos de um array de acordo com a DTO
+     * 
+     * @param array<string,mixed>
+     */
     public static function validate(array $data): void
     {
         $errors = [];
