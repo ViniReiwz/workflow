@@ -750,6 +750,22 @@ class WorkflowObject extends Model
             ->values();
     }
 
+    private function placeIsLocked(string $placeName): bool
+    {
+        /** @var WorkflowDefinition */
+        $workflowDef = $this->definition;
+        foreach($this->current_places as $curr_place)
+        {
+            $transFPlace = $workflowDef->transitionsFromPlace($curr_place);
+            foreach($transFPlace as $transition)
+            {
+                if(in_array($placeName,$transition->tos)){ return true; }
+            }
+        }
+        
+        return false;
+    }
+
     /**
      * Retorna todas as transitions habilitadas para o objeto de workflow, com base no seu estado atual.
      * @return Collection<int, TransitionDefinition>
@@ -758,10 +774,21 @@ class WorkflowObject extends Model
     {
         /** @var WorkflowDefinition */
         $workflowDef = $this->definition()->firstOrFail();
+        
 
-        return $workflowDef->transitions()
-            ->filter(fn (TransitionDefinition $transition): bool => in_array($transition->from, $this->current_places, true))
-            ->values();
+        $Alltrans = $workflowDef->transitions();
+        $enabledTrans = $Alltrans->filter(function ($transition){
+
+            $enabled = false;
+            if(in_array($transition->from, $this->current_places))
+            {
+                if(!$this->placeIsLocked($transition->from))
+                { $enabled == true; }
+            }
+            return $enabled;
+        });
+   
+        return $enabledTrans;
     }
 
     /**
