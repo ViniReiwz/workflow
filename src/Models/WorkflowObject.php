@@ -571,9 +571,7 @@ class WorkflowObject extends Model
 
             $fromPlaces = $object->current_places;
 
-            $this->handlePlaceChange($transition);
-
-            // $object->current_places = $transition->tos;
+            $object->handlePlaceChange($transition);
 
             $object->save();
             $object->history()->create([
@@ -588,7 +586,6 @@ class WorkflowObject extends Model
             ]);
         });
 
-        $this->save();
         $this->refresh();
 
         event(new TransitionAppliedEvent(
