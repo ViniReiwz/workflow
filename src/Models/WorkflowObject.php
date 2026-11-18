@@ -145,50 +145,41 @@ class WorkflowObject extends Model
     }
 
     /**
-     * Retorna as submissões de formulário que o usuário têm permissão para ver, a depender do 
-     * estado do objeto de workflow e das transitions da definição
+     * Retorna as submissões de formulário visíveis ao usuário (caso existam), sendo aquelas 
+     * vindas do último place e também daquelas na qualo usuário teria participação ativa 
+     * (places que sua role o permitiria atuar).
      * 
-     * @param Collection<TransitionDefinition> $transitionDTOs
+     * @param WorkflowDefinition $workflowDef
+     * 
      * @return Collection<int, FormSubmission>
      */
-    private function viewableSubmissions(Collection $transitionDTOs)
-    {
+    private function viewableSubmissions(WorkflowDefinition $workflowDef): Collection
+    { 
+        /** @var Collection<int, WorkflowHistory> */
+        $fullHist = $this->history;
+        $fullHist->sortByDesc('created_at');
+        
         /** @var Collection<int, FormSubmission> */
         $formSubmissions = collect();
-        foreach($transitionDTOs as $transition)
+
+        // Recupera o histórico mais recentemente criado e coloca a submissão na lista
+        $latest = $fullHist->pop()->formSubmission;
+        if($latest){ $formSubmissions->push($latest); }
+
+        // Percorre todos os históricos e verifica se o place do qual o histórico (e a submissão) vem possui as mesmas roles do usuário.
+        foreach($fullHist as $hist)
         {
-            $form = $transition->form();
-            if($form)
-            {    
-                $formSubmissions = $formSubmissions->concat(Forms::submissions($form->name, $form->version, (string)$this->id));
+            $fromPlace = $workflowDef->place($hist->from_places[0]);
+
+            if($workflowDef->verifyRole($fromPlace->roles, Auth()->user()))
+            {
+                $submission = $hist->formSubmission;
+                if($submission){ $formSubmissions->push($submission); }
             }
         }
 
-        if (!Gate::allows('admin')) 
-        {
-            $formSubmissions = $formSubmissions->filter(function ($submission) use ($transitionDTOs) {
-                $can = false;
-
-                /** @var FormDefinition */
-                $formDef = $submission->formDefinition()->first();
-                
-                // dd($transitionDTOs->where('form', $formDef->name));
-
-                /** @var TransitionDefinition */
-                $ref_transition = $transitionDTOs->where('form', $formDef->name)->first();
-                if(array_intersect($this->current_places, $ref_transition->tos))
-                {
-                    $can = true;
-                };
-
-                return $can;
-            });
-
-            /** @var Collection<int, FormSubmission> */
-            $final_coll = $formSubmissions->isEmpty() ? collect([]) : collect([$formSubmissions->sortByDesc('created_at')->values()->first()]);
-            return $final_coll;
-        }
-        
+        // Ordena por dara de criação (mais recente -> mais antiga)
+        $formSubmissions->sortByDesc('created_at');
         return $formSubmissions;
     }
 
@@ -407,7 +398,7 @@ class WorkflowObject extends Model
         $title = $workflowDefinition->definition['label'] ?? $workflowDefinition->name;
         $activities = SELF::obterAtividades($this->id);
         
-        $formSubmissions = $this->viewableSubmissions($workflowTransitions['all']);
+        $formSubmissions = $this->viewableSubmissions($workflowDefinition);
         
         $workflowObjectData = [
             'workflowObject'        => $this,
@@ -416,7 +407,7 @@ class WorkflowObject extends Model
             'forms'                 => $forms,
             'name'                  => $title,
             'activities'            => $activities,
-            'formSubmissions'       => collect($formSubmissions) ?? collect([]),
+            'formSubmissions'       => $formSubmissions ?? collect([]),
             'orientacaoUsuario'     => $this->buildUserGuidance($allowedTransitions),
             'historicoEstados'      => $this->buildHistory(),
         ];
