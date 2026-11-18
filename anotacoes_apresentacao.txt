@@ -1,0 +1,30 @@
+no workflow hoje na definition tem a parte das notificações e nelas, o append_roles, 
+que está sendo usado para notificaficar o destino da transição, isso poderia ser feito direto. 
+A notificação da origem já é padrão mas o destino não.
+
+-/-
+
+Alinhar os tipos de workflow com as definições:
+	draft -> nao tem objetos instanciados dele (vazio) 
+	arquivado -> já tem objetos instanciados nele, não esta mais em uso
+
+-/-
+
+Fazer figura de como uma model da aplicação se relaciona, associa com um objeto do workflow e vice versa. 
+(no workflow definitions, objects e tabela da aplicação)
+
+-/-
+
+Em "Meus Empresitimos" adicionar data do inicio do processo e fim do fluxo ao lado de "finalizado" junto com um feedback.
+
+-/-
+
+quando publica de uma versão do workflow para outra os users e roles nao sao migrados para a nova definição -> ver o que fazer
+
+-/-
+
+ter documentação de como criar um novo projeto usando o workflow
+
+-/-
+
+Remover coluna ações de "Meus Emprestimos" e de "Atendimentos" quando o emprestimo já foi finalizado.
