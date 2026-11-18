@@ -110,8 +110,8 @@ class WorkflowDefinition extends Model
             {
                 // A string em $role->source tem formato '*guard_name.NomePerm', então faz essa separação em um array
                 $sourceData = explode(".", substr($role->source, 1));
-                
-                if($user->hasRole($sourceData[1], $sourceData[0])) { return true; };
+
+                if($user->hasPermissionTo($sourceData[1], $sourceData[0])) { return true; };
             }
         }
 
