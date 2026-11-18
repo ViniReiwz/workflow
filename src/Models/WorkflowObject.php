@@ -145,51 +145,44 @@ class WorkflowObject extends Model
     }
 
     /**
-     * Retorna as submissões de formulário que o usuário têm permissão para ver, a depender do 
-     * estado do objeto de workflow e das transitions da definição
+     * Retorna as submissões de formulário visíveis ao usuário (caso existam), sendo aquelas 
+     * vindas do último place e também daquelas na qualo usuário teria participação ativa 
+     * (places que sua role o permitiria atuar).
      * 
-     * @param Collection<TransitionDefinition> $transitionDTOs
+     * @param WorkflowDefinition $workflowDef
+     * 
      * @return Collection<int, FormSubmission>
      */
-    private function viewableSubmissions(Collection $transitionDTOs)
-    {
+    private function viewableSubmissions(): Collection
+    { 
+        /** @var WorkflowDefinition */
+        $workflowDef = $this->definition;
+
+        /** @var Collection<int, WorkflowHistory> */
+        $fullHist = collect($this->history->all());
+        $fullHist->sortByDesc('created_at');
+        
         /** @var Collection<int, FormSubmission> */
         $formSubmissions = collect();
-        foreach($transitionDTOs as $transition)
+
+        // Recupera o histórico mais recentemente criado e coloca a submissão na lista
+        $latest = $fullHist->pop()->formSubmission;
+        if($latest){ $formSubmissions->push($latest); }
+
+        // Percorre todos os históricos e verifica se o place do qual o histórico (e a submissão) vem possui as mesmas roles do usuário.
+        foreach($fullHist as $hist)
         {
-            $form = $transition->form();
-            if($form)
-            {    
-                $formSubmissions = $formSubmissions->concat(Forms::submissions($form->name, $form->version, (string)$this->id));
+            $fromPlace = $workflowDef->place($hist->from_places[0]);
+
+            if($workflowDef->verifyRole($fromPlace->roles, Auth()->user()))
+            {
+                $submission = $hist->formSubmission;
+                if($submission){ $formSubmissions->push($submission); }
             }
         }
 
-        if (!Gate::allows('admin')) 
-        {
-            $formSubmissions = $formSubmissions->filter(function ($submission) use ($transitionDTOs) {
-                $can = false;
-
-                /** @var FormDefinition */
-                $formDef = $submission->formDefinition()->first();
-                
-                // dd($transitionDTOs->where('form', $formDef->name));
-
-                /** @var TransitionDefinition */
-                $ref_transition = $transitionDTOs->where('form', $formDef->name)->first();
-                if(array_intersect($this->current_places, $ref_transition->tos))
-                {
-                    $can = true;
-                };
-
-                return $can;
-            });
-
-            /** @var Collection<int, FormSubmission> */
-            $final_coll = $formSubmissions->isEmpty() ? collect([]) : collect([$formSubmissions->sortByDesc('created_at')->values()->first()]);
-            return $final_coll;
-        }
-        
-        return $formSubmissions;
+        // Ordena por dara de criação (mais recente -> mais antiga)
+        return $formSubmissions->sortByDesc('created_at');
     }
 
     /**
@@ -307,9 +300,11 @@ class WorkflowObject extends Model
         /** @var WorkflowDefinition */
         $workflowDef = $this->definition;
 
-        /** @var WorkflowHistory */
+        /** @var Collection<int, WorkflowHistory> */
         $wfHistory = $this->history;
-        
+
+        $wfHistory->sortByDesc('created_at');
+
         foreach($wfHistory as $history)
         {
             $actLbl = $workflowDef->transition($history['transition_name'])->label;
@@ -407,7 +402,7 @@ class WorkflowObject extends Model
         $title = $workflowDefinition->definition['label'] ?? $workflowDefinition->name;
         $activities = SELF::obterAtividades($this->id);
         
-        $formSubmissions = $this->viewableSubmissions($workflowTransitions['all']);
+        $formSubmissions = $this->viewableSubmissions($workflowDefinition);
         
         $workflowObjectData = [
             'workflowObject'        => $this,
@@ -416,7 +411,7 @@ class WorkflowObject extends Model
             'forms'                 => $forms,
             'name'                  => $title,
             'activities'            => $activities,
-            'formSubmissions'       => collect($formSubmissions) ?? collect([]),
+            'formSubmissions'       => $formSubmissions ?? collect([]),
             'orientacaoUsuario'     => $this->buildUserGuidance($allowedTransitions),
             'historicoEstados'      => $this->buildHistory(),
         ];
@@ -459,6 +454,42 @@ class WorkflowObject extends Model
         });
 
         return $objects;
+    }
+
+    /**
+     * Lida com a alteração de 'current_places' após a aplcação de uma transição
+     * @param TransitionDefinition $appliedTrans Transição aplicada
+     * @return void
+     */
+    private function handlePlaceChange(TransitionDefinition $appliedTrans)
+    {
+        $newCurrPlace = [];
+
+        // Quando uma transição é aplicada, seu 'from' sai de current_places.
+        foreach($this->current_places as $curr_place) 
+        {
+            if($curr_place != $appliedTrans->from){ $newCurrPlace[] = $curr_place; }
+        }
+        
+        // Assim, os tos desta mesma transição entram em current_places
+        foreach($appliedTrans->tos as $to)
+        {
+            $newCurrPlace[] = $to;
+        }
+
+        $aux = $newCurrPlace[0];
+        $allEqual = true;
+
+        // Verifica se todos os places dentro do array são iguais, e o implode em um único valor dentro do array em caso afirmativo.
+        // (Isso ocorre porque podemos ter dependências entre places, que ficam aramzenadas separadamente até que todas sejam resolvidas)
+        foreach($newCurrPlace as $newCurr)
+        {
+            if($aux != $newCurr)   { $allEqual = false; break; }
+        }
+
+        if($allEqual){ $newCurrPlace = [$aux]; }
+
+        $this->current_places = $newCurrPlace;
     }
 
     /**
@@ -534,7 +565,8 @@ class WorkflowObject extends Model
             }
 
             $fromPlaces = $object->current_places;
-            $object->current_places = $transition->tos;
+
+            $object->handlePlaceChange($transition);
 
             $object->save();
             $object->history()->create([
@@ -615,7 +647,7 @@ class WorkflowObject extends Model
     {
         /** @var WorkflowDefinition */
         $workflowDefinition = $this->definition;
-        if ($workflowDefinition === null) {
+        if ($workflowDefinition == null) {
             return false;
         }
 
@@ -751,6 +783,42 @@ class WorkflowObject extends Model
     }
 
     /**
+     * Contabiliza o número de dependências de um place específico com os places em 
+     * 'current_places'
+     * @param string $placeName Nome do place a ter as dependências contabilizadas
+     * @return int Número de dependências contabilizadas
+     */
+    private function placeDependencies(string $placeName): int
+    {
+        $count = 0;
+
+        /** @var WorkflowDefinition */
+        $workflowDef = $this->definition;
+        foreach($this->current_places as $curr_place)
+        {
+            // Verifica se, para algum place em 'curr_places' a transition deste também referencia outro place em 'current_places' como destino, caracterizando uma dependência
+            $transFPlace = $workflowDef->transitionsFromPlace($curr_place);
+            foreach($transFPlace as $transition)
+            {
+                if(in_array($placeName, $transition->tos)){ $count++; }
+            }
+        }
+
+        return $count;
+    }
+
+    /**
+     * Vertifica se um place está bloqueado, ou seja, não pode ter sua transição executada
+     * @param string $placeName Nome do place a ser verificado
+     * @return bool
+     */
+    private function placeIsLocked(string $placeName): bool
+    {
+        // Verifica se há alguma dependência deste place
+        return $this->placeDependencies($placeName) >= 1;
+    }
+
+    /**
      * Retorna todas as transitions habilitadas para o objeto de workflow, com base no seu estado atual.
      * @return Collection<int, TransitionDefinition>
      */
@@ -758,10 +826,21 @@ class WorkflowObject extends Model
     {
         /** @var WorkflowDefinition */
         $workflowDef = $this->definition()->firstOrFail();
+        
 
-        return $workflowDef->transitions()
-            ->filter(fn (TransitionDefinition $transition): bool => in_array($transition->from, $this->current_places, true))
-            ->values();
+        $Alltrans = $workflowDef->transitions();
+        $enabledTrans = $Alltrans->filter(function ($transition){
+
+            $enabled = false;
+            if(in_array($transition->from, $this->current_places))
+            {
+                if(!$this->placeIsLocked($transition->from))
+                { $enabled = true; }
+            }
+            return $enabled;
+        });
+   
+        return $enabledTrans;
     }
 
     /**

@@ -110,8 +110,8 @@ class WorkflowDefinition extends Model
             {
                 // A string em $role->source tem formato '*guard_name.NomePerm', então faz essa separação em um array
                 $sourceData = explode(".", substr($role->source, 1));
-                
-                if($user->hasRole($sourceData[1], $sourceData[0])) { return true; };
+
+                if($user->hasPermissionTo($sourceData[1], $sourceData[0])) { return true; };
             }
         }
 
@@ -189,7 +189,8 @@ class WorkflowDefinition extends Model
 
     /**
      * Modifica o status de uma definição para o referenciado na função.
-     * Caso o estado atual da função já seja o desejado, apenas retorna da função sem mais modificações
+     * Caso o estado atual da função já seja o desejado, apenas retorna da 
+     * função sem mais modificações
      * @param WorkflowStatus $status
      * @return void
      */
@@ -257,13 +258,13 @@ class WorkflowDefinition extends Model
     }
 
     /**
-     * Verifica se a definição está ou não publicada, retornando true em caso 
+     * Verifica se a definição está ou não arquivada, retornando true em caso 
      * afirmativo e false c.c
      * @return boolean
      */
-    public function isPublished()
+    public function isArchived()
     {
-        return $this->status == WorkflowStatus::PUBLISHED;
+        return $this->status == WorkflowStatus::ARCHIVED;
     }
 
     /**
@@ -410,7 +411,7 @@ class WorkflowDefinition extends Model
         $users = User::all();
     
         $users = $users->filter(function($user) use ($workflowDef, $roleName){
-            return $workflowDef->verifyRole($roleName, $user);
+            return $user->hasRole($roleName, 'workflow_' . $workflowDef->id);
         });
 
         return $users;
@@ -604,11 +605,11 @@ class WorkflowDefinition extends Model
      * Retorna todas as definições cujo status é 'PUBLISHED'
      * @return Collection<int, WorkflowDefinition>
      */
-    public static function getAllPublished()
+    public static function getUnarchived()
     {
         $all = SELF::all();
         return $all->filter(function($workflowDef){
-                return $workflowDef->status === WorkflowStatus::PUBLISHED;
+            return ($workflowDef->status != WorkflowStatus::ARCHIVED);
         });
     }
 

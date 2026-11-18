@@ -7,7 +7,7 @@
         {{ count($workflowObjectData['formSubmissions']) === 1 ? 'submissão' : 'submissões' }}
     </span>
 </div>
-@forelse (collect($workflowObjectData['formSubmissions'])->reverse() as $submissao)    
+@forelse (collect($workflowObjectData['formSubmissions']) as $submissao)    
     <div class="card shadow-sm border-0 mb-3"> 
         <div class="card-header bg-light border-0 py-2">
             <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">

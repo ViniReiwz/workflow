@@ -6,37 +6,57 @@ use Uspdev\Workflow\Http\Controllers\WorkflowController;
 
 Route::group(['prefix' => config('uspdev-workflow.prefix'), 'middleware' => ['web']], function () {
 
-    
-    Route::get('/createdefinition', [WorkflowController::class, 'createDefinition'])->name('workflows.create-definition');
-    Route::post('/createdefinition', [WorkflowController::class, 'storeDefinition'])->name('workflows.store-definition');
-    Route::get('/listdefinitions', [WorkflowController::class, 'listDefinitions'])->name('workflows.list-definitions');
-    Route::get('/definition/{definitionName}/{version}', [WorkflowController::class, 'showDefinition'])->name('workflows.showDefinition');
-    Route::delete('/definition/remove/{definitionName}/{version}', [WorkflowController::class, 'destroyDefinition'])->name('workflows.destroyDefinition');
-    Route::get('/editdefinition/{definitionName}/{version}', [WorkflowController::class, 'editDefinition'])->name('workflows.editDefinition');
-    Route::post('/updatedefinition/', [WorkflowController::class, 'updateDefinition'])->name('workflows.updateDefinition');
-    Route::get('/exportdefinition/{definitionName}',[WorkflowController::class,'exportDefinition'])->name('workflows.exportDefinition');
-    Route::get('/definition/publish/{definitionName}/{version}',[WorkflowController::class,'publishDefinition'])->name('workflows.publishDefinition');
-    Route::get('/definition/draft/{definitionName}/{version}',[WorkflowController::class,'draftDefinition'])->name('workflows.draftDefinition');
+    // ---------- Definições ----------
+    Route::controller(WorkflowController::class)->group(function () {
 
-    Route::get('/viewcreateobject', [WorkflowController::class, 'viewCreateObject'])->name('workflows.viewCreateObject');
-    Route::get('/createobject/{definitionName}/{version}', [WorkflowController::class, 'createObject'])->name('workflows.createObject');
-    Route::post('/createobject/{definitionName}', [WorkflowController::class, 'submitForm']);
-    Route::get('/object/{id}', [WorkflowController::class, 'showObject'])->name('workflows.showObject');
-    Route::post('/object/{id}', [WorkflowController::class, 'applyTransition'])->name('workflows.showObject'); // TODO - Essa rota e /apply-transition/ fazem a mesma coisa, corrigir isso ai
-    Route::get('/object/{id}/form/{transition}', [WorkflowController::class, 'showForm'])->name('workflows.showForm');
-    Route::get('/showuserobjects', [WorkflowController::class, 'showUserObjects'])->name('workflows.show-user-objects');
-    Route::post('/apply-transition/{id}', [WorkflowController::class, 'applyTransition'])->name('workflows.applyTransition');
-    Route::delete('/delete-object/{object}', [WorkflowController::class, 'deleteObject'])->name('workflows.delete-object');
+        Route::get('/createdefinition', 'createDefinition')->name('workflows.create-definition');
+        Route::post('/createdefinition', 'storeDefinition')->name('workflows.store-definition');
+        Route::get('/listdefinitions', 'listDefinitions')->name('workflows.list-definitions');
+        Route::post('/updatedefinition', 'updateDefinition')->name('workflows.updateDefinition');
+        Route::get('/editdefinition/{definitionName}/{version}', 'editDefinition')->name('workflows.editDefinition');
+        Route::get('/exportdefinition/{definitionName}', 'exportDefinition')->name('workflows.exportDefinition');
 
-    Route::put('/listdefinitions/setuser', [WorkflowController::class, 'mngUserRole'])->name('workflows.setuser');
-    Route::get('/atendimentos', [WorkflowController::class, 'atendimentos'])->name('workflows.atendimentos');
+        Route::prefix('definition')->group(function () {
+            Route::get('/{definitionName}/{version}', 'showDefinition')->name('workflows.showDefinition');
+            Route::delete('/remove/{definitionName}/{version}', 'destroyDefinition')->name('workflows.destroyDefinition');
+            Route::get('/publish/{definitionName}/{version}', 'publishDefinition')->name('workflows.publishDefinition');
+            Route::get('/draft/{definitionName}/{version}', 'draftDefinition')->name('workflows.draftDefinition');
+        });
 
-    Route::get('/backups', [WorkflowBackupController::class, 'backups_index'])->name('workflows.backups-idx');
-    Route::get('/backups/gen-backups', [WorkflowBackupController::class, 'bckp_gen_all'])->name('workflows.gen-all-backups');
-    Route::get('/backups/{workflowDefinition}/gen-backup', [WorkflowBackupController::class, 'def_bckp_gen'])->name('workflows.gen-backup');
-    Route::get('/backups/{workflowDefinition}/list',[WorkflowBackupController::class, 'def_bckp_list'])->name('workflows.def-backup-list');
-    Route::get('/backups/{workflowDefinition}/remove/{created_time}', [WorkflowBackupController::class, 'remove_bckp'])->name('workflows.def-remove-bckp');
-    Route::get('/backups/{workflowDefinition}/remove-all', [WorkflowBackupController::class, 'remove_def_bckps'])->name('workflows.def-rmv-bckps');
-    Route::get('/backups/remove-all', [WorkflowBackupController::class, 'remove_all_bckps'])->name('workflows.rmv-bckps');
-    Route::get('/backups/{workflowDefinition}/restore/{created_time}', [WorkflowBackupController::class,'restore_backup'])->name('workflows.restore-bckp');
+        Route::put('/listdefinitions/setuser', 'mngUserRole')->name('workflows.setuser');
+    });
+
+    // ---------- Objetos ----------
+    Route::controller(WorkflowController::class)->group(function () {
+        Route::get('/viewcreateobject', 'viewCreateObject')->name('workflows.viewCreateObject');
+        Route::get('/createobject/{definitionName}/{version}', 'createObject')->name('workflows.createObject');
+        Route::post('/createobject/{definitionName}', 'submitForm');
+        Route::get('/showuserobjects', 'showUserObjects')->name('workflows.show-user-objects');
+        Route::post('/apply-transition/{id}', 'applyTransition')->name('workflows.applyTransition');
+        Route::delete('/delete-object/{object}', 'deleteObject')->name('workflows.delete-object');
+        Route::get('/atendimentos', 'atendimentos')->name('workflows.atendimentos');
+
+        Route::prefix('object')->group(function () {
+            Route::get('/{id}', 'showObject')->name('workflows.showObject');
+            Route::post('/{id}', 'applyTransition')->name('workflows.showObject');
+            Route::get('/{id}/form/{transition}', 'showForm')->name('workflows.showForm');
+        });
+    });
+
+    // ---------- Backups ----------
+    Route::controller(WorkflowBackupController::class)
+        ->prefix('backups')
+        ->group(function () {
+            Route::get('/', 'backups_index')->name('workflows.backups-idx');
+            Route::get('/gen-backups', 'bckp_gen_all')->name('workflows.gen-all-backups');
+            Route::get('/remove-all', 'remove_all_bckps')->name('workflows.rmv-bckps');
+
+            Route::prefix('{workflowDefinition}')->group(function () {
+                Route::get('/gen-backup', 'def_bckp_gen')->name('workflows.gen-backup');
+                Route::get('/list', 'def_bckp_list')->name('workflows.def-backup-list');
+                Route::get('/remove/{created_time}', 'remove_bckp')->name('workflows.def-remove-bckp');
+                Route::get('/remove-all', 'remove_def_bckps')->name('workflows.def-rmv-bckps');
+                Route::get('/restore/{created_time}', 'restore_backup')->name('workflows.restore-bckp');
+            });
+        });
 });

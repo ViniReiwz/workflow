@@ -17,6 +17,8 @@ class PlaceDefinition extends AbstractWfDto
 
     /**
      * Cria uma instância do DTO a partir de um array bruto (banco ou request).
+     * 
+     * @param array<string,mixed> $data
      */
     public static function fromArray(array $data): static
     {
@@ -29,6 +31,11 @@ class PlaceDefinition extends AbstractWfDto
         );
     }
 
+    /**
+     * Valida os dados da DTO, vindos de um array
+     * 
+     * @param array<string,mixed>
+     */
     public static function validate(array $data): void
     {
         $errors = [];
