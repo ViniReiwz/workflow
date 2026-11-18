@@ -159,7 +159,7 @@ class WorkflowObject extends Model
         $workflowDef = $this->definition;
 
         /** @var Collection<int, WorkflowHistory> */
-        $fullHist = $this->history;
+        $fullHist = collect($this->history->all());
         $fullHist->sortByDesc('created_at');
         
         /** @var Collection<int, FormSubmission> */
@@ -300,9 +300,11 @@ class WorkflowObject extends Model
         /** @var WorkflowDefinition */
         $workflowDef = $this->definition;
 
-        /** @var WorkflowHistory */
+        /** @var Collection<int, WorkflowHistory> */
         $wfHistory = $this->history;
-        
+
+        $wfHistory->sortByDesc('created_at');
+
         foreach($wfHistory as $history)
         {
             $actLbl = $workflowDef->transition($history['transition_name'])->label;
