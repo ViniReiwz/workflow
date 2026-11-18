@@ -411,7 +411,7 @@ class WorkflowDefinition extends Model
         $users = User::all();
     
         $users = $users->filter(function($user) use ($workflowDef, $roleName){
-            return $workflowDef->verifyRole($roleName, $user);
+            return $user->hasRole($roleName, 'workflow_' . $workflowDef->id);
         });
 
         return $users;
