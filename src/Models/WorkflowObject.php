@@ -179,8 +179,7 @@ class WorkflowObject extends Model
         }
 
         // Ordena por dara de criação (mais recente -> mais antiga)
-        $formSubmissions->sortByDesc('created_at');
-        return $formSubmissions;
+        return $formSubmissions->sortByDesc('created_at');
     }
 
     /**
